@@ -1,0 +1,46 @@
+body {
+	margin: 0;
+}
+
+#kota {
+	display: block;
+	background-image: url('../img/background.jpg');
+	background-size: 30%;
+	position: absolute;
+	right: 0;
+}
+
+#terminal {
+	width: calc(100% - 800px);
+	height: 100%;
+	position: absolute;
+	background-color: #ccc;
+	overflow: scroll;
+}
+
+#terminal .padding {
+	padding: 10px;
+}
+
+.btn {
+	background-color: #F0F0F0;
+	border: 1px solid #ccc;
+	outline: none !important;
+}
+
+.btn:hover {
+	cursor: pointer;
+	background-color: #000;
+	border-color: #aaa;
+	color: #fff;
+}
+
+table {
+	width: 100%;
+}
+
+table tr td {
+	border: 1px solid #000;
+	text-align: center;
+	padding: 10px;
+}
