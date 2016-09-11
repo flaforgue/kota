@@ -84,7 +84,7 @@
   	<canvas id="kota" width="800" height="600"></canvas>
 
   	<script>
-  		var NB_ANTS_INIT = 3;
+  		var NB_ANTS_INIT = 1;
 
   		function terminal(toDisplay) {
   			if (typeof toDisplay == "object") {
@@ -92,6 +92,8 @@
   			} else {
   				document.getElementById('dialog').innerHTML += toDisplay;
   			}
+
+  			document.getElementById('dialog').innerHTML += " ";
   		}
 
 	  	function init() {
@@ -99,6 +101,7 @@
 		  	anthill = new createjs.Shape();
 		  	anthill.ants = new Array;
 		  	anthill.size = 40;
+		  	anthill.nb_ants_max = 100;
 			anthill.graphics.beginFill("#666").drawCircle(0, 0, anthill.size);
 			anthill.graphics.beginFill("#000").drawCircle(0, 0, 20);
 			var anthillX, anthillY;
@@ -109,7 +112,7 @@
     		anthill.x = anthillX;
 	    	anthill.y = anthillY;
 			anthill.food_stock = 0;
-			anthill.max_food_stock = 100;
+			anthill.max_food_stock = 1000;
 			anthill.found_resources = new Array;
 			anthill.activities_done = {
 				'waiting': 0,
@@ -130,7 +133,6 @@
 	  	}
 
 	  	function updateGame() {
-	  		createAnts();
 	  		updateAnts();
 	  		updateResources();
 	  		stage.update();
@@ -152,13 +154,11 @@
 	    	}
 	    }
 
+	    setInterval(createAnts, 5000);
+
 	    function createAnts() {
-	    	if (anthill.ants.length < 100) {
-		    	for (var i = 0; i < anthill.food_stock ; i ++) {
-		    		if (Math.ceil(Math.random()*1000) == 1000 && anthill.ants.length < 100) {
-		    			initAnt();
-		    		}
-		    	}
+	    	if (anthill.ants.length < anthill.nb_ants_max && anthill.ants.length < anthill.food_stock) {
+	    		initAnt()
 		    }
 	    }
 
@@ -168,14 +168,16 @@
 			newAnt.x = anthill.x;
 			newAnt.y = anthill.y;
 			newAnt.go_to_wild = true;
-			newAnt.chance_to_find_resource = 0;
+			newAnt.wait_before_finding_resource = 500;
+			newAnt.exploring_efficiency = Math.ceil(Math.random() * 4) + 1;
+			terminal(newAnt.exploring_efficiency);
 			defaultAntAction(newAnt);
 			anthill.ants.push(newAnt);
 
 			newAnt.graphics.beginFill("#621").drawCircle(0, 0, 3);
 			stage.addChild(newAnt);
 
-			document.getElementById('nb-ants').innerHTML = parseInt(document.getElementById('nb-ants').innerHTML) + 1;
+			document.getElementById('nb-ants').innerHTML = anthill.ants.length;
 	    }
 
 	    function defaultAntAction(ant) {
@@ -214,10 +216,12 @@
 	    }
 
 	    function updateExploring(ant) {
-	    	ant.chance_to_find_resource ++;
+	    	if (ant.wait_before_finding_resource > 0) {
+	    		ant.wait_before_finding_resource --;
+	    	}
 	    	if (isNear(ant.x, ant.y, ant.xT, ant.yT) || ! hasTarget(ant)) {
-	    		if (ant.chance_to_find_resource > 500 && anthill.found_resources.length < 25 && findResource()) {
-	    			ant.chance_to_find_resource = 0;
+	    		if (ant.wait_before_finding_resource <= 0 && anthill.found_resources.length < 25 && findResource(ant)) {
+	    			ant.wait_before_finding_resource = 500;
 					saveResource(ant.xT, ant.yT);
 				}
 	    		var tagetX, targetY;
@@ -232,8 +236,9 @@
 			moveToTarget(ant, ant.xT, ant.yT);
 	    }
 
-	    function findResource() {
-	    	return Math.ceil(Math.random() * 2) == 2;
+	    function findResource(ant) {
+	    	var chances = 6 - ant.exploring_efficiency;
+	    	return Math.ceil(Math.random() * chances * 2) == chances * 2;
 	    }
 
 	    function hasTarget(ant) {
@@ -308,7 +313,7 @@
 	    	ant.go_to_wild = true;
 	    	if (anthill.food_stock < anthill.max_food_stock) {
 				anthill.food_stock ++;
-				document.getElementById('food-stock').innerHTML = parseInt(document.getElementById('food-stock').innerHTML) + 1 + ' / ' + anthill.max_food_stock;
+				document.getElementById('food-stock').innerHTML = anthill.food_stock + ' / ' + anthill.max_food_stock;
 	    	}
 	    }
 
@@ -334,11 +339,11 @@
 	    	if (ant.action != "collecting") {
 	    		if (typeof ant.action != "undefined") {
 		    		anthill.activities_done[ant.action] --;
-			    	document.getElementById('nb-' + ant.action + '-ants').innerHTML = parseInt(document.getElementById('nb-' + ant.action + '-ants').innerHTML) - 1;
+			    	document.getElementById('nb-' + ant.action + '-ants').innerHTML = anthill.activities_done[ant.action];
 			    }
 
 	    		anthill.activities_done['collecting'] ++;
-	    		document.getElementById('nb-collecting-ants').innerHTML = parseInt(document.getElementById('nb-collecting-ants').innerHTML) + 1;
+	    		document.getElementById('nb-collecting-ants').innerHTML = anthill.activities_done['collecting'];
 	    	}
 	    	ant.action = "collecting";
 	    }
@@ -380,14 +385,14 @@
 	    function startWaiting(ant) {
 	    	if (typeof ant.action != "undefined") {
 	    		anthill.activities_done[ant.action] --;
-	    		document.getElementById('nb-' + ant.action + '-ants').innerHTML = parseInt(document.getElementById('nb-' + ant.action + '-ants').innerHTML) - 1;
+	    		document.getElementById('nb-' + ant.action + '-ants').innerHTML = anthill.activities_done[ant.action];
 	    	}
 
 	    	ant.xT = anthill.x;
 	    	ant.yT = anthill.y;
-	    	ant.action = "waiting";
 	    	anthill.activities_done['waiting'] ++;
-	    	document.getElementById('nb-waiting-ants').innerHTML = parseInt(document.getElementById('nb-waiting-ants').innerHTML) + 1;
+	    	document.getElementById('nb-waiting-ants').innerHTML = anthill.activities_done['waiting'];
+	    	ant.action = "waiting";
 	    }
 
 	    function moveToTarget(ant, targetX, targetY) {
@@ -401,14 +406,14 @@
 	    function startExploring(ant) {
 	    	if (typeof ant.action != "undefined") {
 		    	anthill.activities_done[ant.action] --;
-			    document.getElementById('nb-' + ant.action + '-ants').innerHTML = parseInt(document.getElementById('nb-' + ant.action + '-ants').innerHTML) - 1;
+			    document.getElementById('nb-' + ant.action + '-ants').innerHTML = anthill.activities_done[ant.action];
 			}
-			ant.chance_to_find_resource = 0;
+			ant.wait_before_finding_resource = 500;
 	    	ant.x = Math.ceil(ant.x);
 	    	ant.y = Math.ceil(ant.y);
 	    	ant.action = "exploring";
 	    	anthill.activities_done['exploring'] ++;
-	    	document.getElementById('nb-exploring-ants').innerHTML = parseInt(document.getElementById('nb-exploring-ants').innerHTML) + 1;
+	    	document.getElementById('nb-exploring-ants').innerHTML = anthill.activities_done['exploring'];
 
 	    }
 
@@ -445,6 +450,48 @@
 	    		if (anthill.ants[i].action == activity)
 	    			return anthill.ants[i];
 	    	}
+	    }
+
+	    setInterval(decreaseFood, 2000);
+	    setInterval(starvingCheck, 10000);
+
+	    function starvingCheck() {
+	    	if (isStarving()) {
+	    		decreasePopulation();
+	    	}
+	    }
+
+	    function decreaseFood() {
+	    	var difficulty = 0.1 + (0.05 / Math.floor(anthill.ants.length) / anthill.nb_ants_max);
+	    	anthill.food_stock -= Math.floor(anthill.ants.length * difficulty);
+
+	    	if (anthill.food_stock < 0) {
+	    		anthill.food_stock = 0;
+	    	}
+	    	document.getElementById('food-stock').innerHTML = anthill.food_stock + ' / ' + anthill.max_food_stock;
+	    }
+
+	    function isStarving() {
+	    	return anthill.food_stock <= 0;
+	    }
+
+	    function decreasePopulation() {
+	    	if (anthill.ants.length > 1) {
+		    	for (var i = 0 ; i < (Math.ceil(anthill.ants.length / 10)) ; i ++) {
+		    		killAnt(anthill.ants[i], i);
+		    		anthill.food_stock ++;
+		    		document.getElementById('food-stock').innerHTML = anthill.food_stock + ' / ' + anthill.max_food_stock;
+		    	}
+		    }
+	    }
+
+	    function killAnt(ant, positionInAnthill) {
+	    	anthill.activities_done[ant.action] --;
+	    	document.getElementById('nb-' + ant.action + '-ants').innerHTML = anthill.activities_done[ant.action];
+
+	    	anthill.ants.splice(positionInAnthill, 1);
+	    	stage.removeChild(ant);
+	    	document.getElementById('nb-ants').innerHTML = anthill.ants.length;
 	    }
 
 	    /* MANAGEMENT PANEL */
