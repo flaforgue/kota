@@ -15,7 +15,6 @@ body {
 	height: 100%;
 	position: absolute;
 	background-color: #ccc;
-	overflow: scroll;
 }
 
 #terminal .padding {
@@ -76,4 +75,21 @@ table tr td {
     height: 20px;
     position: absolute;
     text-align: center;
+    left: 0;
+}
+
+@media only screen and (max-width: 800px) {
+	#terminal {
+		position: fixed;
+		bottom: 0;
+		width: 100%;
+		height: auto;
+		z-index: 100;
+	}
+
+	#kota {
+		position: static;
+		margin: auto;
+		margin-bottom: 400px;
+	}
 }
