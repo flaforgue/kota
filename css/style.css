@@ -44,3 +44,36 @@ table tr td {
 	text-align: center;
 	padding: 10px;
 }
+
+#food-stock, #nb-ants {
+	text-align: left;
+}
+
+.barbox {
+	height: 20px;
+	background-color: #000;
+	border: 1px solid #000;
+	position: relative;
+}
+
+.bar {
+	height: 20px;
+	display: inline-block;
+}
+
+.bar.ants {
+	background-color: #621;
+}
+
+.bar.food {
+	background-color: #008400;
+}
+
+.barlabel {
+	color: #fff;
+    width: 100%;
+    display: inline-block;
+    height: 20px;
+    position: absolute;
+    text-align: center;
+}

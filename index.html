@@ -20,8 +20,18 @@
 
 			<tbody>
 				<tr>
-					<td id="nb-ants"></td>
-					<td id="food-stock"></td>
+					<td id="nb-ants">
+						<div class="barbox">
+							<span id="nb-ants-bar" class="bar ants"></span>
+							<span id="nb-ants-label" class="barlabel"></span>
+						</div>
+					</td>
+					<td id="food-stock">
+						<div class="barbox">
+							<span id="food-stock-bar" class="bar food"></span>
+							<span id="food-stock-label" class="barlabel"></span>
+						</div>
+					</td>
 				</tr>
 			</tbody>
 		</table>
@@ -128,8 +138,8 @@
 			createjs.Ticker.framerate = 100;
 			createjs.Ticker.addEventListener("tick", updateGame);
 
-			document.getElementById('nb-ants').innerHTML = anthill.ants.length;
-			document.getElementById('food-stock').innerHTML = anthill.food_stock + '/' + anthill.max_food_stock;
+			updateNbAntsBarAndLabel();
+			updateFood(0);
 	  	}
 
 	  	function updateGame() {
@@ -170,13 +180,18 @@
 			newAnt.go_to_wild = true;
 			newAnt.wait_before_finding_resource = 500;
 			newAnt.exploring_efficiency = Math.ceil(Math.random() * 4) + 1;
-			defaultAntAction(newAnt);
 			anthill.ants.push(newAnt);
-
-			newAnt.graphics.beginFill("#621").drawCircle(0, 0, 3);
 			stage.addChild(newAnt);
+			
+			defaultAntAction(newAnt);
 
-			document.getElementById('nb-ants').innerHTML = anthill.ants.length;
+			updateNbAntsBarAndLabel();
+	    }
+
+	    function updateNbAntsBarAndLabel() {
+	    	var antsLevel = (anthill.ants.length / anthill.nb_ants_max) * 100;
+	    	document.getElementById('nb-ants-bar').style.width = antsLevel + '%';
+	    	document.getElementById('nb-ants-label').innerHTML = anthill.ants.length + ' / ' + anthill.nb_ants_max;
 	    }
 
 	    function defaultAntAction(ant) {
@@ -292,7 +307,7 @@
 
 	    function updateCollectingAntDirection(ant) {
 	    	if (! ant.go_to_wild && isNear(ant.x, ant.y, anthill.x, anthill.y)) {
-				stockResource(ant);
+				storeFood(ant);
 			} else if (ant.go_to_wild && isNear(ant.x, ant.y, ant.collected_resource.x, ant.collected_resource.y)) {
 				pickResource(ant);
 			}
@@ -308,12 +323,31 @@
 	    	ant.go_to_wild = false;
 	    }
 
-	    function stockResource(ant) {
+	    function storeFood(ant) {
 	    	ant.go_to_wild = true;
 	    	if (anthill.food_stock < anthill.max_food_stock) {
-				anthill.food_stock ++;
-				document.getElementById('food-stock').innerHTML = anthill.food_stock + ' / ' + anthill.max_food_stock;
+				increaseFood(1);
 	    	}
+	    }
+
+	    function increaseFood(amount) {
+	    	updateFood(amount);
+	    }
+
+	    function decreaseFood(amount) {
+	    	updateFood(amount * (-1));
+	    }
+
+	    function updateFood(amount) {
+	    	anthill.food_stock += amount;
+
+	    	if (anthill.food_stock < 0) {
+	    		anthill.food_stock = 0;
+	    	}
+
+	    	var foodLevel = (anthill.food_stock / anthill.max_food_stock) * 100;
+	    	document.getElementById('food-stock-bar').style.width = foodLevel + '%';
+	    	document.getElementById('food-stock-label').innerHTML = anthill.food_stock + ' / ' + anthill.max_food_stock;
 	    }
 
 	    function moveCollectingAnt(ant) {
@@ -343,6 +377,9 @@
 
 	    		anthill.activities_done['collecting'] ++;
 	    		document.getElementById('nb-collecting-ants').innerHTML = anthill.activities_done['collecting'];
+
+	    		ant.graphics.clear();
+				ant.graphics.beginFill("#008400").drawCircle(0, 0, 3);
 	    	}
 	    	ant.action = "collecting";
 	    }
@@ -392,6 +429,9 @@
 	    	anthill.activities_done['waiting'] ++;
 	    	document.getElementById('nb-waiting-ants').innerHTML = anthill.activities_done['waiting'];
 	    	ant.action = "waiting";
+
+	    	ant.graphics.clear();
+			ant.graphics.beginFill("#621").drawCircle(0, 0, 3);
 	    }
 
 	    function moveToTarget(ant, targetX, targetY) {
@@ -413,7 +453,8 @@
 	    	ant.action = "exploring";
 	    	anthill.activities_done['exploring'] ++;
 	    	document.getElementById('nb-exploring-ants').innerHTML = anthill.activities_done['exploring'];
-
+	    	ant.graphics.clear();
+			ant.graphics.beginFill("#4949ff").drawCircle(0, 0, 3);
 	    }
 
 	    function hasWaitingAnt() {
@@ -451,7 +492,7 @@
 	    	}
 	    }
 
-	    setInterval(decreaseFood, 2000);
+	    setInterval(makeAntsEat, 2000);
 	    setInterval(starvingCheck, 10000);
 
 	    function starvingCheck() {
@@ -460,14 +501,10 @@
 	    	}
 	    }
 
-	    function decreaseFood() {
+	    function makeAntsEat() {
 	    	var difficulty = 0.1 + (0.05 / Math.floor(anthill.ants.length) / anthill.nb_ants_max);
-	    	anthill.food_stock -= Math.floor(anthill.ants.length * difficulty);
-
-	    	if (anthill.food_stock < 0) {
-	    		anthill.food_stock = 0;
-	    	}
-	    	document.getElementById('food-stock').innerHTML = anthill.food_stock + ' / ' + anthill.max_food_stock;
+	    	var foodEaten = Math.floor(anthill.ants.length * difficulty);
+	    	decreaseFood(foodEaten);
 	    }
 
 	    function isStarving() {
@@ -478,8 +515,7 @@
 	    	if (anthill.ants.length > 1) {
 		    	for (var i = 0 ; i < (Math.ceil(anthill.ants.length / 10)) ; i ++) {
 		    		killAnt(anthill.ants[i], i);
-		    		anthill.food_stock ++;
-		    		document.getElementById('food-stock').innerHTML = anthill.food_stock + ' / ' + anthill.max_food_stock;
+		    		increaseFood(1);
 		    	}
 		    }
 	    }
@@ -490,7 +526,7 @@
 
 	    	anthill.ants.splice(positionInAnthill, 1);
 	    	stage.removeChild(ant);
-	    	document.getElementById('nb-ants').innerHTML = anthill.ants.length;
+	    	updateNbAntsBarAndLabel();
 	    }
 
 	    /* MANAGEMENT PANEL */
