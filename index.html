@@ -84,7 +84,7 @@
   	<canvas id="kota" width="800" height="600"></canvas>
 
   	<script>
-  		var NB_ANTS_INIT = 1;
+  		var NB_ANTS_INIT = 9;
 
   		function terminal(toDisplay) {
   			if (typeof toDisplay == "object") {
@@ -170,7 +170,6 @@
 			newAnt.go_to_wild = true;
 			newAnt.wait_before_finding_resource = 500;
 			newAnt.exploring_efficiency = Math.ceil(Math.random() * 4) + 1;
-			terminal(newAnt.exploring_efficiency);
 			defaultAntAction(newAnt);
 			anthill.ants.push(newAnt);
 
@@ -237,7 +236,8 @@
 	    }
 
 	    function findResource(ant) {
-	    	var chances = 6 - ant.exploring_efficiency;
+	    	var chances = 6 - ant.exploring_efficiency + (anthill.found_resources.length * 2);
+	    	terminal(chances);
 	    	return Math.ceil(Math.random() * chances * 2) == chances * 2;
 	    }
 
