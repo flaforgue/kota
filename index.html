@@ -53,27 +53,27 @@
 					<td>
 						<span id="nb-waiting-ants">0</span>
 					</td>
-					<td><button id="start-waiting" class="btn">!</button></td>
+					<td><button id="start-waiting" class="start-action btn" data-action="waiting">!</button></td>
 				</tr>
 				
 				<tr id="exploring">
 					<td class="action">Exploring</td>
 					<td class="nb_ants">
-						<button id="remove-exploring-ant" class="btn">-</button>
+						<button id="remove-exploring-ant" class="remove-ant-action btn" data-action="exploring">-</button>
 						<span id="nb-exploring-ants">0</span>
-						<button id="add-exploring-ant" class="btn">+</button>
+						<button id="add-exploring-ant" data-action="exploring" class="add-ant-action btn">+</button>
 					</td>
-					<td><button id="start-exploring" class="btn">!</button></td>
+					<td><button id="start-exploring" class="start-action btn" data-action="exploring">!</button></td>
 				</tr>
 
 				<tr id="collecting">
 					<td class="action">Collecting</td>
 					<td>
-						<button id="remove-collecting-ant" class="btn">-</button>
+						<button id="remove-collecting-ant" class="remove-ant-action btn" data-action="collecting">-</button>
 						<span id="nb-collecting-ants">0</span>
-						<button id="add-collecting-ant" class="btn">+</button>
+						<button id="add-collecting-ant" data-action="collecting" class="add-ant-action btn">+</button>
 					</td>
-					<td><button id="start-collecting" class="btn">!</button></td>
+					<td><button id="start-collecting" class="start-action btn" data-action="collecting">!</button></td>
 				</tr>
 			</tbody>
 		</table>
@@ -93,8 +93,10 @@
 
   	<canvas id="kota" width="800" height="600"></canvas>
 
+  	<script type="text/javascript" src="./js/jquery-3.1.0.min.js"></script>
+
   	<script>
-  		var NB_ANTS_INIT = 9;
+  		var NB_ANTS_INIT = 10;
 
   		function terminal(toDisplay) {
   			if (typeof toDisplay == "object") {
@@ -107,6 +109,9 @@
   		}
 
 	  	function init() {
+	  		game = {
+	  			isPaused: false
+	  		};
 	  		stage = new createjs.Stage("kota");
 		  	anthill = new createjs.Shape();
 		  	anthill.ants = new Array;
@@ -143,9 +148,11 @@
 	  	}
 
 	  	function updateGame() {
-	  		updateAnts();
-	  		updateResources();
-	  		stage.update();
+	  		if (! game.isPaused) {
+		  		updateAnts();
+		  		updateResources();
+		  		stage.update();
+		  	}
 	    }
 
 	    function updateResources() {
@@ -174,7 +181,6 @@
 
 	    function initAnt() {
 	    	var newAnt = new createjs.Shape();
-	    	newAnt.tick = 10;
 			newAnt.x = anthill.x;
 			newAnt.y = anthill.y;
 			newAnt.go_to_wild = true;
@@ -206,6 +212,10 @@
 	    		case 'collecting' :
 	    			startCollecting(ant);
 	    			break;
+
+	    		default :
+	    			console.log('unknown action');
+	    			break;
 	    	}
 	    }
 
@@ -220,12 +230,18 @@
 	    		case 'waiting' :
 	    			updateWaiting(ant);
 	    			break;
+
 	    		case 'collecting' :
 		    		updateCollecting(ant);
 		    		break;
+
 		    	case 'exploring' :
 		    		updateExploring(ant);
 		    		break;
+
+		    	default :
+	    			console.log('unknown action');
+	    			break;
 	    	}
 	    }
 
@@ -288,7 +304,6 @@
 	    	if (typeof ant.collected_resource != "undefined") {
 		    	if (ant.collected_resource.life <= 0) {
 		    		delete ant.collected_resource;
-		    		ant.go_to_wild = false;
 			    	startCollecting(ant);
 				} else {
 					updateCollectingAntDirection(ant);	
@@ -366,7 +381,6 @@
 	    	ant.y = Math.ceil(ant.y);
 	    	var resource = findResourceToCollect();
 	    	if (resource != false) {
-			    ant.tick = 0;
 			    ant.collected_resource = resource;
 	    	}
 	    	if (ant.action != "collecting") {
@@ -380,8 +394,8 @@
 
 	    		ant.graphics.clear();
 				ant.graphics.beginFill("#008400").drawCircle(0, 0, 3);
+	    		ant.action = "collecting";
 	    	}
-	    	ant.action = "collecting";
 	    }
 
 	    function findResourceToCollect() {
@@ -496,15 +510,19 @@
 	    setInterval(starvingCheck, 10000);
 
 	    function starvingCheck() {
-	    	if (isStarving()) {
-	    		decreasePopulation();
+	    	if (! game.isPaused) {
+		    	if (isStarving()) {
+		    		decreasePopulation();
+		    	}
 	    	}
 	    }
 
 	    function makeAntsEat() {
-	    	var difficulty = 0.1 + (0.05 / Math.floor(anthill.ants.length) / anthill.nb_ants_max);
-	    	var foodEaten = Math.floor(anthill.ants.length * difficulty);
-	    	decreaseFood(foodEaten);
+	    	if (! game.isPaused) {
+	    		var difficulty = 0.1 + (0.05 / Math.floor(anthill.ants.length) / anthill.nb_ants_max);
+		    	var foodEaten = Math.floor(anthill.ants.length * difficulty);
+		    	decreaseFood(foodEaten);
+	    	}
 	    }
 
 	    function isStarving() {
@@ -529,75 +547,138 @@
 	    	updateNbAntsBarAndLabel();
 	    }
 
+	    // auto pause/replay si quitte l'onglet/la fenêtre
+	    $(window).focus(function() {
+		    replayGameIfPaused();
+		});
+
+		$(window).blur(function() {
+		    pauseGame();
+		});
+
+		function replayGameIfPaused() {
+			if (game.isPaused) {
+				replayGame();
+			}
+		}
+
+		function replayGame() {
+			console.log('replayed');
+			game.isPaused = false;
+		}
+
+		function pauseGame() {
+			console.log('paused');
+			game.isPaused = true;
+		}
+
+		function startAction(ant, action) {
+			switch (action) {
+				case 'waiting' :
+					startWaiting(ant);
+					break;
+
+				case 'exploring' :
+					startExploring(ant);
+					break;
+
+				case 'collecting' :
+					startCollecting(ant);
+					break;
+
+				default :
+	    			console.log('unknown action');
+	    			break;
+			}
+		}
+
+		function hasAntDoing(action) {
+	    	switch(action) {
+	    		case 'exploring':
+	    			return hasExploringAnt();
+	    			break;
+
+	    		case 'collecting':
+	    			return hasCollectingAnt();
+	    			break;
+
+	    		default :
+	    			console.log('unknown action');
+	    			break;
+	    	}
+	    }
+
+	    function getAntDoing(action) {
+	    	switch(action) {
+	    		case 'exploring':
+	    			return getExploringAnt();
+	    			break;
+
+	    		case 'collecting':
+	    			return getCollectingAnt();
+	    			break;
+
+	    		default :
+	    			console.log('unknown action');
+	    			break;
+	    	}
+	    }
+
 	    /* MANAGEMENT PANEL */
-	    document.getElementById('start-exploring').addEventListener("click", function() {
-	    	for (var i = 0 ; i < anthill.ants.length ; i ++) {
-	    		if (anthill.ants[i].action != "exploring") {
-	    			startExploring(anthill.ants[i]);
-	    		}
-	    	}
-
+	    $('.start-action').click(function() {
+	    	var action = $(this).data('action');
 	    	document.getElementById('nb-waiting-ants').innerHTML = 0;
 	    	document.getElementById('nb-collecting-ants').innerHTML = 0;
-	    });
+	    	document.getElementById('nb-exploring-ants').innerHTML = 0;
+	    	document.getElementById('nb-' + action + '-ants').innerHTML = anthill.ants.length;
 
-	    document.getElementById('start-collecting').addEventListener("click", function() {
 	    	for (var i = 0 ; i < anthill.ants.length ; i ++) {
-	    		if (anthill.ants[i].action != "collecting") {
-	    			startCollecting(anthill.ants[i]);
+	    		if (anthill.ants[i].action != action) {
+	    			startAction(anthill.ants[i], action);
 	    		}
 	    	}
-
-	    	document.getElementById('nb-waiting-ants').innerHTML = 0;
-	    	document.getElementById('nb-exploring-ants').innerHTML = 0;
 	    });
 
-	    document.getElementById('start-waiting').addEventListener("click", function() {
-	    	for (var i = 0 ; i < anthill.ants.length ; i ++) {
-	    		if (anthill.ants[i].action != "waiting") {
-	    			startWaiting(anthill.ants[i]);
-	    		}
-	    	}
-
-	    	document.getElementById('nb-exploring-ants').innerHTML = 0;
-	    	document.getElementById('nb-collecting-ants').innerHTML = 0;
+	    var changeAntActionInterval;
+	    $('.add-ant-action').mousedown(function() {
+	    	var action = $(this).data('action');
+	    	addAntAction(action);
+	    	changeAntActionInterval = setInterval(function() {
+	    		addAntAction(action);
+	    	}, 200);
+	    	return false;
 	    });
 
-	    document.getElementById('add-exploring-ant').addEventListener("click", function() {
+	    $('.remove-ant-action').mousedown(function() {
+	    	var action = $(this).data('action');
+	    	removeAntAction(action);
+	    	changeAntActionInterval = setInterval(function() {
+	    		removeAntAction(action);
+	    	}, 200);
+	    	return false;
+	    });
+
+	    $('.add-ant-action, .remove-ant-action').mouseup(function() {
+	    	clearInterval(changeAntActionInterval);
+	    });
+
+	    function addAntAction(action) {
 	    	if (hasWaitingAnt()) {
-		    	var ant = getWaitingAnt();
+	    		var ant = getWaitingAnt();
 		    	if (typeof ant != "undefined") {
-		    		startExploring(ant);
+		    		startAction(ant, action);
 		    	}
-		    }
-	    });
+	    	}
+	    }
 
-	    document.getElementById('remove-exploring-ant').addEventListener("click", function() {
-	    	if (hasExploringAnt()) {
-		    	var ant = getExploringAnt();
+	    function removeAntAction(action) {
+	    	if (hasAntDoing(action)) {
+	    		var ant = getAntDoing(action);
 		    	if (typeof ant != "undefined") {
 		    		startWaiting(ant);
 		    	}
-		    }
-	    });
-
-	    document.getElementById('add-collecting-ant').addEventListener("click", function() {
-	    	if (hasWaitingAnt()) {
-		    	var ant = getWaitingAnt();
-		    	if (typeof ant != "undefined") {
-		    		startCollecting(ant);
-		    	}
-		    }
-	    });
-
-	    document.getElementById('remove-collecting-ant').addEventListener("click", function() {
-	    	if (hasCollectingAnt()) {
-		    	var ant = getCollectingAnt();
-		    	if (typeof ant != "undefined") {
-		    		startWaiting(ant);
-		    	}
-		    }
-	    });
+	    	}
+	    }
 	</script>
 
 </body>
