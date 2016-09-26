@@ -11,6 +11,7 @@ function Ant(anthill) {
 	this.startAction(defaultAction);
 
 }
+
 Ant.prototype.startAction = function(action) {
 	switch (action) {
 		case 'waiting' :
@@ -31,9 +32,7 @@ Ant.prototype.startAction = function(action) {
 	}
 	ManagementPanel.updateNbAntsForAction(action);
 };
-Ant.prototype.stopCollecting = function() {
-	this.startWaiting();
-};
+
 Ant.prototype.startWaiting = function(action) {
 	if (typeof this.action != "undefined") {
 		this.anthill.activities_done[this.action] --;
@@ -47,6 +46,20 @@ Ant.prototype.startWaiting = function(action) {
 	this.shape.graphics.clear();
 	this.shape.graphics.beginFill("#621").drawCircle(0, 0, 3);
 };
+
+Ant.prototype.startExploring = function() {
+	if (typeof this.action != "undefined") {
+    	this.anthill.activities_done[this.action] --;
+	}
+	this.wait_before_finding_resource = 500;
+	this.shape.x = Math.ceil(this.shape.x);
+	this.shape.y = Math.ceil(this.shape.y);
+	this.action = "exploring";
+	this.anthill.activities_done['exploring'] ++;
+	this.shape.graphics.clear();
+	this.shape.graphics.beginFill("#4949ff").drawCircle(0, 0, 3);
+}
+
 Ant.prototype.startCollecting = function() {
 	this.shape.x = Math.ceil(this.shape.x);
 	this.shape.y = Math.ceil(this.shape.y);
@@ -65,33 +78,19 @@ Ant.prototype.startCollecting = function() {
 		this.action = "collecting";
 	}
 };
-Ant.prototype.startExploring = function() {
-	if (typeof this.action != "undefined") {
-    	this.anthill.activities_done[this.action] --;
-	}
-	this.wait_before_finding_resource = 500;
-	this.shape.x = Math.ceil(this.shape.x);
-	this.shape.y = Math.ceil(this.shape.y);
-	this.action = "exploring";
-	this.anthill.activities_done['exploring'] ++;
-	this.shape.graphics.clear();
-	this.shape.graphics.beginFill("#4949ff").drawCircle(0, 0, 3);
-}
-Ant.prototype.isNearFromTarget = function() {
-	return this.isNear(this.xT, this.yT);
+
+Ant.prototype.stopCollecting = function() {
+	this.startWaiting();
 };
-Ant.prototype.isNearFromAnthill = function() {
-	return this.isNear(this.anthill.shape.x, this.anthill.shape.y);
-};
+
+Ant.prototype.isNearFromTarget = function() {return this.isNear(this.xT, this.yT);};
+Ant.prototype.isNearFromAnthill = function() {return this.isNear(this.anthill.shape.x, this.anthill.shape.y);};
 Ant.prototype.isNear = function(x, y) {
 	return (Math.abs(this.shape.x - x) < 2) && (Math.abs(this.shape.y - y) < 2)
 };
-Ant.prototype.moveToTarget = function() {
-	this.moveTo(this.xT, this.yT);
-};
-Ant.prototype.moveToAnthill = function() {
-	this.moveTo(this.anthill.shape.x, this.anthill.shape.y);
-};
+
+Ant.prototype.moveToTarget = function() {this.moveTo(this.xT, this.yT);};
+Ant.prototype.moveToAnthill = function() {this.moveTo(this.anthill.shape.x, this.anthill.shape.y);};
 Ant.prototype.moveTo = function(targetX, targetY) {
 	if (this.shape.x < targetX) this.shape.x += 1;
 	else if (this.shape.x > targetX) this.shape.x -= 1;
@@ -99,6 +98,7 @@ Ant.prototype.moveTo = function(targetX, targetY) {
 	else if (this.shape.y < targetY) this.shape.y += 1;
 	else if (this.shape.y > targetY) this.shape.y -= 1;
 };
+
 Ant.prototype.update = function() {
 	switch(this.action) {
 		case 'waiting' :
@@ -118,6 +118,7 @@ Ant.prototype.update = function() {
 			break;
 	}
 };
+
 Ant.prototype.updateWaiting = function() {
 	if (this.isNearFromTarget() || ! this.hasTarget()) {
 		var tagetX, targetY;
@@ -131,6 +132,7 @@ Ant.prototype.updateWaiting = function() {
 
 	this.moveToTarget();
 };
+
 Ant.prototype.updateCollecting = function() {
 	if (typeof this.collected_resource != "undefined") {
     	if (this.collected_resource.life <= 0) {
@@ -157,8 +159,21 @@ Ant.prototype.updateCollectingDirection = function() {
 		this.pickResource();
 	}
 };
+Ant.prototype.moveCollecting = function() {
+	if (this.go_to_wild) {
+		this.moveTo(this.collected_resource.shape.x, this.collected_resource.shape.y);
+	} else {
+		this.moveToAnthill();
+	}
+};
 Ant.prototype.canStoreFood = function() {
 	return ! this.go_to_wild && this.isNearFromAnthill();
+};
+Ant.prototype.storeFood = function() {
+	this.go_to_wild = true;
+	if (this.anthill.food_stock < this.anthill.max_food_stock) {
+		this.anthill.increaseFood(1);
+	}
 };
 Ant.prototype.canPickResource = function() {
 	return this.go_to_wild && this.isNear(this.collected_resource.shape.x, this.collected_resource.shape.y);
@@ -173,19 +188,7 @@ Ant.prototype.pickResource = function() {
 	
 	this.go_to_wild = false;
 };
-Ant.prototype.storeFood = function() {
-	this.go_to_wild = true;
-	if (this.anthill.food_stock < this.anthill.max_food_stock) {
-		this.anthill.increaseFood(1);
-	}
-};
-Ant.prototype.moveCollecting = function() {
-	if (this.go_to_wild) {
-		this.moveTo(this.collected_resource.shape.x, this.collected_resource.shape.y);
-	} else {
-		this.moveToAnthill();
-	}
-};
+
 Ant.prototype.updateExploring = function() {
 	if (this.wait_before_finding_resource > 0) {
 		this.wait_before_finding_resource --;
@@ -205,6 +208,18 @@ Ant.prototype.updateExploring = function() {
 
 	this.moveToTarget();
 };
+Ant.prototype.hasTarget = function() {
+	return typeof this.xT != "undefined" && typeof this.yT != "undefined";
+};
+Ant.prototype.findNewTarget = function() {
+	var tagetX, targetY;
+	do {
+		targetX = Math.ceil(Math.random() * 800);
+		targetY = Math.ceil(Math.random() * 600);
+	} while (! game.containsCoordinates(targetX, targetY, 0));
+	this.xT = targetX;
+	this.yT = targetY;
+};
 Ant.prototype.canFindResource = function() {
 	return this.wait_before_finding_resource <= 0 && this.anthill.found_resources.length < 25;
 };
@@ -217,16 +232,4 @@ Ant.prototype.saveResource = function() {
 	resourceY = Math.ceil(this.yT);
 	var resource = new Resource(resourceX, resourceY);
 	this.anthill.found_resources.push(resource);
-};
-Ant.prototype.hasTarget = function() {
-	return typeof this.xT != "undefined" && typeof this.yT != "undefined";
-};
-Ant.prototype.findNewTarget = function() {
-	var tagetX, targetY;
-	do {
-		targetX = Math.ceil(Math.random() * 800);
-		targetY = Math.ceil(Math.random() * 600);
-	} while (! game.containsCoordinates(targetX, targetY, 0));
-	this.xT = targetX;
-	this.yT = targetY;
 };

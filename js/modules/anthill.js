@@ -1,4 +1,3 @@
-
 function Anthill() {
 	this.shape = new createjs.Shape();
 
@@ -24,24 +23,23 @@ function Anthill() {
 		'collecting': 0,
 	};
 }
+
 Anthill.prototype.getDifficulty = function() {
 	return 0.1 + (0.05 / Math.floor(this.anthill.ants.length) / this.anthill.nb_ants_max);
 }
+
 Anthill.prototype.canCreateAnt = function() {
 	return this.ants.length < this.nb_ants_max && this.ants.length < this.food_stock
 }
+
 Anthill.prototype.createAnt = function() {
 	var newAnt = new Ant(this);
 	this.ants.push(newAnt);
 	game.stage.addChild(newAnt.shape);
 };
-Anthill.prototype.increaseFood = function(amount) {
-	this.updateFood(amount);
-};
-Anthill.prototype.decreaseFood = function(amount) {
-	this.updateFood(amount * (-1));
-};
 
+Anthill.prototype.increaseFood = function(amount) {this.updateFood(amount);};
+Anthill.prototype.decreaseFood = function(amount) {this.updateFood(amount * (-1));};
 Anthill.prototype.updateFood = function(amount) {
 	this.food_stock += amount;
 
@@ -51,10 +49,12 @@ Anthill.prototype.updateFood = function(amount) {
 
 	ManagementPanel.updateFoodBarAndLabel();
 };
+
 Anthill.prototype.containsCoordinate = function(x, y) {
 	return x > (this.shape.x - this.size) && x < (this.shape.x) + this.size
 	&& y > (this.shape.y) - this.size && y < (this.shape.y) + this.size;
 };
+
 Anthill.prototype.findCollectableResource = function() {
 	var posibleResources = new Array;
 	for (var i = 0 ; i < this.found_resources.length ; i ++) {
@@ -68,37 +68,28 @@ Anthill.prototype.findCollectableResource = function() {
 		return posibleResources[Math.ceil(Math.random() * (posibleResources.length - 1))];
 	}
 };
-Anthill.prototype.hasWaitingAnt = function() {
-	return this.hasAntOfActivity('waiting');
-};
-Anthill.prototype.hasExploringAnt = function() {
-	return this.hasAntOfActivity('exploring');
-};
-Anthill.prototype.hasCollectingAnt = function() {
-	return this.hasAntOfActivity('collecting');
-};
+
+Anthill.prototype.hasWaitingAnt = function() {return this.hasAntOfActivity('waiting');};
+Anthill.prototype.hasExploringAnt = function() {return this.hasAntOfActivity('exploring');};
+Anthill.prototype.hasCollectingAnt = function() {return this.hasAntOfActivity('collecting');};
 Anthill.prototype.hasAntOfActivity = function(activity) {
 	return this.activities_done[activity] > 0;
 };
 
-Anthill.prototype.getWaitingAnt = function() {
-	return this.getAntOfActivity('waiting');
-};
-Anthill.prototype.getExploringAnt = function() {
-	return this.getAntOfActivity('exploring');
-};
-Anthill.prototype.getCollectingAnt = function() {
-	return this.getAntOfActivity('collecting');
-};
+Anthill.prototype.getWaitingAnt = function() {return this.getAntOfActivity('waiting');};
+Anthill.prototype.getExploringAnt = function() {return this.getAntOfActivity('exploring');};
+Anthill.prototype.getCollectingAnt = function() {return this.getAntOfActivity('collecting');};
 Anthill.prototype.getAntOfActivity = function(activity) {
 	for (var i = 0; i < this.ants.length ; i ++) {
 		if (this.ants[i].action == activity)
 			return this.ants[i];
 	}
 };
+
 Anthill.prototype.isStarving = function() {
 	return this.food_stock <= 0;
 };
+
 Anthill.prototype.decreasePopulation = function() {
 	if (this.ants.length > 1) {
     	for (var i = 0 ; i < (Math.ceil(this.ants.length / 10)) ; i ++) {
@@ -107,6 +98,7 @@ Anthill.prototype.decreasePopulation = function() {
     	}
     }
 };
+
 Anthill.prototype.killAnt = function(antToKillIndex) {
 	var antToKill = this.ants[antToKillIndex];
 	this.activities_done[antToKill.action] --;

@@ -1,4 +1,5 @@
 var NB_ANTS_INIT = 10;
+var FOOD_INIT = 1;
 var game = new Game();
 
 game.createAnthill();
@@ -8,11 +9,11 @@ for (var i = 0; i < NB_ANTS_INIT ; i ++) {
 }
 
 createjs.Ticker.framerate = 100;
-createjs.Ticker.addEventListener("tick", function() {
-	game.update()
-});
+createjs.Ticker.addEventListener("tick", function() {game.update()});
 
-game.anthill.updateFood(0);
+ManagementPanel.updateNbAntsForAction('waiting');
+ManagementPanel.updateNbAntsBarAndLabel();
+game.anthill.updateFood(FOOD_INIT);
 
 setInterval(function() {
 	game.makeAntsEat();
@@ -28,15 +29,8 @@ setInterval(function() {
 	ManagementPanel.updateNbAntsBarAndLabel();
 }, 10000);
 
-$(window).focus(function() {
-    game.replayGameIfPaused();
-});
-$(window).blur(function() {
-    game.pauseGame();
-});
-
-ManagementPanel.getNbAntsLabelForAction('waiting').text(game.anthill.activities_done['waiting']);
-ManagementPanel.updateNbAntsBarAndLabel();
+$(window).focus(function() {game.replayGameIfPaused();});
+$(window).blur(function() {game.pauseGame();});
 
 $('.start-action').click(function() {
 	var action = $(this).data('action');
