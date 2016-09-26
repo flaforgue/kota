@@ -24,6 +24,12 @@ function Anthill() {
 		'collecting': 0,
 	};
 }
+Anthill.prototype.getDifficulty = function() {
+	return 0.1 + (0.05 / Math.floor(this.anthill.ants.length) / this.anthill.nb_ants_max);
+}
+Anthill.prototype.canCreateAnt = function() {
+	return this.ants.length < this.nb_ants_max && this.ants.length < this.food_stock
+}
 Anthill.prototype.createAnt = function() {
 	var newAnt = new Ant(this);
 	this.ants.push(newAnt);

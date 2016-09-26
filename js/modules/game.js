@@ -3,10 +3,12 @@ function Game() {
 	this.stage = new createjs.Stage("kota");
 	this.isPaused = false;
 }
+
 Game.prototype.createAnthill = function() {
 	this.anthill = new Anthill();
 	this.stage.addChild(this.anthill.shape);
 };
+
 Game.prototype.update = function() {
 	if (! this.isPaused) {
   		this.updateAnts();
@@ -19,6 +21,7 @@ Game.prototype.updateAnts = function() {
     	this.anthill.ants[i].update();
     }
 };
+
 Game.prototype.replayGameIfPaused = function() {
 	if (this.isPaused) {
 		this.replayGame();
@@ -30,11 +33,13 @@ Game.prototype.replayGame = function() {
 Game.prototype.pauseGame = function() {
 	this.isPaused = true;
 };
+
 Game.prototype.createAnts = function() {
-	if (this.anthill.ants.length < this.anthill.nb_ants_max && this.anthill.ants.length < this.anthill.food_stock) {
+	if (this.anthill.canCreateAnt()) {
 		this.anthill.createAnt();
     }
-}
+};
+
 Game.prototype.starvingCheck = function() {
 	if (! this.isPaused) {
     	if (this.anthill.isStarving()) {
@@ -42,13 +47,15 @@ Game.prototype.starvingCheck = function() {
     	}
 	}
 };
+
 Game.prototype.makeAntsEat = function() {
 	if (! this.isPaused) {
-		var difficulty = 0.1 + (0.05 / Math.floor(this.anthill.ants.length) / this.anthill.nb_ants_max);
+		var difficulty = this.anthill.getDifficulty();
     	var foodEaten = Math.floor(this.anthill.ants.length * difficulty);
     	this.anthill.decreaseFood(foodEaten);
 	}
 };
+
 // raf : trouver meilleur moyen
 Game.prototype.updateResources = function() {
 	if (this.anthill.found_resources.length > 0) {
@@ -65,6 +72,7 @@ Game.prototype.updateResources = function() {
     	} while (typeof resource != "undefined")
 	}
 };
+
 // RAF : pas de valeurs en dur
 Game.prototype.containsCoordinates = function(x, y, offset) {
 	return x > offset && x < (800 - offset) && y > offset && y < (600 - offset);
