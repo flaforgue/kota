@@ -25,7 +25,7 @@ function Anthill() {
 }
 
 Anthill.prototype.getDifficulty = function() {
-	return 0.1 + (0.05 / Math.floor(this.anthill.ants.length) / this.anthill.nb_ants_max);
+	return 0.1 + (0.05 / Math.floor(this.ants.length) / this.nb_ants_max);
 }
 
 Anthill.prototype.canCreateAnt = function() {
