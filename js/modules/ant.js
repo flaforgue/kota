@@ -92,11 +92,18 @@ Ant.prototype.isNear = function(x, y) {
 Ant.prototype.moveToTarget = function() {this.moveTo(this.xT, this.yT);};
 Ant.prototype.moveToAnthill = function() {this.moveTo(this.anthill.shape.x, this.anthill.shape.y);};
 Ant.prototype.moveTo = function(targetX, targetY) {
-	if (this.shape.x < targetX) this.shape.x += 1;
-	else if (this.shape.x > targetX) this.shape.x -= 1;
-
-	else if (this.shape.y < targetY) this.shape.y += 1;
-	else if (this.shape.y > targetY) this.shape.y -= 1;
+	moveYFirst = Math.ceil(Math.random() * 2) - 1;
+	if (moveYFirst) {
+		if (this.shape.y < targetY) this.shape.y += 1;
+		else if (this.shape.y > targetY) this.shape.y -= 1;
+		else if (this.shape.x < targetX) this.shape.x += 1;
+		else if (this.shape.x > targetX) this.shape.x -= 1;
+	} else {
+		if (this.shape.x < targetX) this.shape.x += 1;
+		else if (this.shape.x > targetX) this.shape.x -= 1;
+		else if (this.shape.y < targetY) this.shape.y += 1;
+		else if (this.shape.y > targetY) this.shape.y -= 1;
+	}
 };
 
 Ant.prototype.update = function() {
