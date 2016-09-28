@@ -65,7 +65,8 @@ Anthill.prototype.findCollectableResource = function() {
 	if (posibleResources.length == 0) {
 		return false;
 	} else {
-		return posibleResources[Math.ceil(Math.random() * (posibleResources.length - 1))];
+		var resourceToCollectIndex = Math.floor(Math.random() * (posibleResources.length));
+		return posibleResources[resourceToCollectIndex];
 	}
 };
 
