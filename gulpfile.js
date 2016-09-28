@@ -15,3 +15,7 @@ gulp.task('scripts', function() {
     .pipe(uglify())
     .pipe(gulp.dest('./js/dist/'));
 });
+
+gulp.task('watch-assets', function() {
+    var watcher = gulp.watch('js/**/*.js', { debounceDelay: 1000 }, ['scripts']);
+});

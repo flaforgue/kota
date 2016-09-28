@@ -34,48 +34,56 @@ Ant.prototype.startAction = function(action) {
 };
 
 Ant.prototype.startWaiting = function(action) {
-	if (typeof this.action != "undefined") {
-		this.anthill.activities_done[this.action] --;
-	}
-	
-	this.action = "waiting";
-	this.anthill.activities_done['waiting'] ++;
+	this.changeActivityTo('waiting');
+
 	this.xT = this.anthill.shape.x;
 	this.yT = this.anthill.shape.y;
-
-	this.shape.graphics.clear();
-	this.shape.graphics.beginFill("#621").drawCircle(0, 0, 3);
 };
 
 Ant.prototype.startExploring = function() {
-	if (typeof this.action != "undefined") {
-    	this.anthill.activities_done[this.action] --;
-	}
+	this.changeActivityTo('exploring');
+
 	this.wait_before_finding_resource = 500;
-	this.shape.x = Math.ceil(this.shape.x);
-	this.shape.y = Math.ceil(this.shape.y);
-	this.action = "exploring";
-	this.anthill.activities_done['exploring'] ++;
-	this.shape.graphics.clear();
-	this.shape.graphics.beginFill("#4949ff").drawCircle(0, 0, 3);
+	this.smoothCoordinates();
 }
 
 Ant.prototype.startCollecting = function() {
-	this.shape.x = Math.ceil(this.shape.x);
-	this.shape.y = Math.ceil(this.shape.y);
+	this.smoothCoordinates();	
+	this.findResourceToCollect();
+	
+	if (this.action != "collecting") {
+		this.changeActivityTo('collecting');
+	}
+};
+
+Ant.prototype.findResourceToCollect = function() {
 	var resource = this.anthill.findCollectableResource();
 	if (resource != false) {
 	    this.collected_resource = resource;
 	}
-	if (this.action != "collecting") {
-		if (typeof this.action != "undefined") {
-    		this.anthill.activities_done[this.action] --;
-	    }
+};
 
-		this.anthill.activities_done['collecting'] ++;
-		this.shape.graphics.clear();
-		this.shape.graphics.beginFill("#008400").drawCircle(0, 0, 3);
-		this.action = "collecting";
+Ant.prototype.smoothCoordinates = function() {
+	this.shape.x = Math.ceil(this.shape.x);
+	this.shape.y = Math.ceil(this.shape.y);
+};
+
+Ant.prototype.changeActivityTo = function(newAction) {
+	this.updateAnthillActivitiesDone(false);
+	this.action = newAction;
+	this.updateAnthillActivitiesDone(true);
+
+	this.shape.graphics.clear();
+	this.shape.graphics.beginFill(ANT_COLORS[newAction]).drawCircle(0, 0, 3);
+};
+
+Ant.prototype.updateAnthillActivitiesDone = function(addAnt) {
+	if (typeof this.action != "undefined") {
+		if (addAnt) {
+			this.anthill.activities_done[this.action] ++;
+		} else {
+			this.anthill.activities_done[this.action] --;
+		}
 	}
 };
 
@@ -86,23 +94,26 @@ Ant.prototype.stopCollecting = function() {
 Ant.prototype.isNearFromTarget = function() {return this.isNear(this.xT, this.yT);};
 Ant.prototype.isNearFromAnthill = function() {return this.isNear(this.anthill.shape.x, this.anthill.shape.y);};
 Ant.prototype.isNear = function(x, y) {
-	return (Math.abs(this.shape.x - x) < 2) && (Math.abs(this.shape.y - y) < 2)
+	return (Math.abs(this.shape.x - x) == 0) && (Math.abs(this.shape.y - y) == 0)
 };
 
 Ant.prototype.moveToTarget = function() {this.moveTo(this.xT, this.yT);};
 Ant.prototype.moveToAnthill = function() {this.moveTo(this.anthill.shape.x, this.anthill.shape.y);};
 Ant.prototype.moveTo = function(targetX, targetY) {
-	moveYFirst = Math.ceil(Math.random() * 2) - 1;
-	if (moveYFirst) {
-		if (this.shape.y < targetY) this.shape.y += 1;
-		else if (this.shape.y > targetY) this.shape.y -= 1;
-		else if (this.shape.x < targetX) this.shape.x += 1;
-		else if (this.shape.x > targetX) this.shape.x -= 1;
+	if (this.hasToMove('x', targetX)) {
+		this.moveToBy('x', targetX);
 	} else {
-		if (this.shape.x < targetX) this.shape.x += 1;
-		else if (this.shape.x > targetX) this.shape.x -= 1;
-		else if (this.shape.y < targetY) this.shape.y += 1;
-		else if (this.shape.y > targetY) this.shape.y -= 1;
+		this.moveToBy('y', targetY);
+	}
+};
+Ant.prototype.hasToMove = function(axe, target) {
+	return this.shape[axe] != target;
+};
+Ant.prototype.moveToBy = function(coordinate, target) {
+	if (this.shape[coordinate] < target) {
+		this.shape[coordinate] += 1;
+	} else if (this.shape[coordinate] > target) {
+		this.shape[coordinate] -= 1;
 	}
 };
 
@@ -128,38 +139,51 @@ Ant.prototype.update = function() {
 
 Ant.prototype.updateWaiting = function() {
 	if (this.isNearFromTarget() || ! this.hasTarget()) {
-		var tagetX, targetY;
-		do {
-			targetX = (this.anthill.shape.x - this.anthill.size/2) + Math.ceil(Math.random() * this.anthill.size);
-			targetY = (this.anthill.shape.y - this.anthill.size/2) + Math.ceil(Math.random() * this.anthill.size);
-		} while (! this.anthill.containsCoordinate(targetX, targetY));
-		this.xT = targetX;
-    	this.yT = targetY;
+		this.findTargetInAnthill();
 	}
 
 	this.moveToTarget();
 };
 
+Ant.prototype.findTargetInAnthill = function() {
+	do {
+		this.xT = (this.anthill.shape.x - this.anthill.size/2) + Math.ceil(Math.random() * this.anthill.size);
+		this.yT = (this.anthill.shape.y - this.anthill.size/2) + Math.ceil(Math.random() * this.anthill.size);
+	} while (! this.anthill.containsCoordinate(this.xT, this.yT));
+}
+
 Ant.prototype.updateCollecting = function() {
-	if (typeof this.collected_resource != "undefined") {
-    	if (this.collected_resource.life <= 0) {
-    		delete this.collected_resource;
-	    	this.startCollecting();
-		} else {
-			this.updateCollectingDirection();	
-			this.moveCollecting();
-		}
+	if (this.hasCollectedResource()) {
+    	this.collectResourceIfPossible();
 	} else if (this.anthill.found_resources.length > 0) {
-		this.startCollecting();
+		this.findResourceToCollect();
 	} else {
-		if (! this.anthill.containsCoordinate(this.xT, this.yT)) {
-			this.xT = this.anthill.shape.x;
-			this.yT = this.anthill.shape.y;
-		}
-		this.updateWaiting();
+		this.actLikeWaitingAnt();
 	}
 };
-Ant.prototype.updateCollectingDirection = function() {
+Ant.prototype.collectResourceIfPossible = function() {
+	if (this.collected_resource.life <= 0) {
+		delete this.collected_resource;
+		this.findResourceToCollect();
+	} else {
+		this.pickOrStoreResource();	
+		this.moveCollecting();
+	}
+};
+Ant.prototype.actLikeWaitingAnt = function() {
+	if (! this.anthill.containsCoordinate(this.xT, this.yT)) {
+		this.forgetTarget();
+	}
+	this.updateWaiting();
+};
+Ant.prototype.forgetTarget = function() {
+	delete this.xT;
+	delete this.yT;
+};
+Ant.prototype.hasCollectedResource = function() {
+	return typeof this.collected_resource != "undefined";
+}
+Ant.prototype.pickOrStoreResource = function() {
 	if (this.canStoreFood()) {
 		this.storeFood();
 	} else if (this.canPickResource()) {
@@ -202,30 +226,30 @@ Ant.prototype.updateExploring = function() {
 	}
 
 	if (! this.hasTarget()) {
-		this.findNewTarget();
+		this.findNewExploringTarget();
 	}
 
 	if (this.isNearFromTarget()) {
-		if (this.canFindResource() && this.hasFoundResource()) {
-			this.wait_before_finding_resource = 500;
-			this.saveResource();
-		}
-		this.findNewTarget();
+		this.findResourceIfPossible();
 	}
 
 	this.moveToTarget();
 };
+Ant.prototype.findResourceIfPossible = function() {
+	if (this.canFindResource() && this.hasFoundResource()) {
+		this.wait_before_finding_resource = 500;
+		this.saveResource();
+	}
+	this.findNewExploringTarget();
+}
 Ant.prototype.hasTarget = function() {
 	return typeof this.xT != "undefined" && typeof this.yT != "undefined";
 };
-Ant.prototype.findNewTarget = function() {
-	var tagetX, targetY;
+Ant.prototype.findNewExploringTarget = function() {
 	do {
-		targetX = Math.ceil(Math.random() * 800);
-		targetY = Math.ceil(Math.random() * 600);
-	} while (! game.containsCoordinates(targetX, targetY, 0));
-	this.xT = targetX;
-	this.yT = targetY;
+		this.xT = Math.ceil(Math.random() * 800);
+		this.yT = Math.ceil(Math.random() * 600);
+	} while (! game.containsCoordinates(this.xT, this.yT, 0));
 };
 Ant.prototype.canFindResource = function() {
 	return this.wait_before_finding_resource <= 0 && this.anthill.found_resources.length < 25;

@@ -1,3 +1,8 @@
+var ANT_COLORS = {
+	"waiting" : "#621",
+	"exploring" : "#4949ff",
+	"collecting" : "#008400"
+};
 var NB_ANTS_INIT = 10;
 var FOOD_INIT = 1;
 var game = new Game();
