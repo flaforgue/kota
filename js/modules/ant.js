@@ -6,8 +6,6 @@ function Ant(anthill) {
 	this.shape.y = anthill.shape.y;
 	this.anthill = anthill;
 	this.carrying = false;
-	this.wait_before_finding_resource = 500;
-	this.exploring_efficiency = Math.ceil(Math.random() * 4) + 1;
 	var defaultAction = ManagementPanel.getDefaultAntAction();
 	this.startAction(defaultAction);
 	this.resource_carried = new createjs.Shape();
@@ -43,9 +41,8 @@ Ant.prototype.startWaiting = function(action) {
 
 Ant.prototype.startExploring = function() {
 	this.changeActivityTo('exploring');
-
-	this.wait_before_finding_resource = 500;
 	this.smoothCoordinates();
+	this.findNewExploringTarget();
 }
 
 Ant.prototype.startCollecting = function() {
@@ -231,10 +228,6 @@ Ant.prototype.pickResource = function() {
 };
 
 Ant.prototype.updateExploring = function() {
-	if (this.wait_before_finding_resource > 0) {
-		this.wait_before_finding_resource --;
-	}
-
 	if (! this.hasTarget()) {
 		this.findNewExploringTarget();
 	}
@@ -247,7 +240,6 @@ Ant.prototype.updateExploring = function() {
 };
 Ant.prototype.findResourceIfPossible = function() {
 	if (this.canFindResource() && this.hasFoundResource()) {
-		this.wait_before_finding_resource = 500;
 		this.saveResource();
 	}
 	this.findNewExploringTarget();
@@ -262,11 +254,12 @@ Ant.prototype.findNewExploringTarget = function() {
 	} while (! game.containsCoordinates(this.xT, this.yT, 0));
 };
 Ant.prototype.canFindResource = function() {
-	return this.wait_before_finding_resource <= 0 && this.anthill.found_resources.length < 25;
+	return this.anthill.found_resources.length < 25;
 };
 Ant.prototype.hasFoundResource = function() {
-	var chances = 6 - this.exploring_efficiency + (this.anthill.found_resources.length * 2);
-	return Math.ceil(Math.random() * chances * 2) == chances * 2;
+	var chances = ((this.anthill.found_resources.length) + 1) * 2;
+	console.log(chances);
+	return Math.ceil(Math.random() * chances) == chances;
 };
 Ant.prototype.saveResource = function() {
 	resourceX = Math.ceil(this.xT);
