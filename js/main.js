@@ -5,20 +5,20 @@ var ANT_COLORS = {
 };
 var NB_ANTS_INIT = 10;
 var FOOD_INIT = 1;
+
 var game = new Game();
 
 game.createAnthill();
-
 for (var i = 0; i < NB_ANTS_INIT ; i ++) {
 	game.anthill.createAnt();
 }
 
-createjs.Ticker.framerate = 100;
-createjs.Ticker.addEventListener("tick", function() {game.update()});
-
 ManagementPanel.updateNbAntsForAction('waiting');
 ManagementPanel.updateNbAntsBarAndLabel();
 game.anthill.updateFood(FOOD_INIT);
+
+createjs.Ticker.framerate = 100;
+createjs.Ticker.addEventListener("tick", function() {game.update()});
 
 setInterval(function() {
 	game.makeAntsEat();

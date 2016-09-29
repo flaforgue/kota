@@ -35,7 +35,6 @@ Anthill.prototype.canCreateAnt = function() {
 Anthill.prototype.createAnt = function() {
 	var newAnt = new Ant(this);
 	this.ants.push(newAnt);
-	game.stage.addChild(newAnt.shape);
 };
 
 Anthill.prototype.increaseFood = function(amount) {this.updateFood(amount);};

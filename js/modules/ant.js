@@ -1,15 +1,16 @@
 
 function Ant(anthill) {
-	this.shape = new createjs.Shape()
+	this.shape = new createjs.Shape();
+	game.stage.addChild(this.shape);
 	this.shape.x = anthill.shape.x;
 	this.shape.y = anthill.shape.y;
 	this.anthill = anthill;
-	this.go_to_wild = true;
+	this.carrying = false;
 	this.wait_before_finding_resource = 500;
 	this.exploring_efficiency = Math.ceil(Math.random() * 4) + 1;
 	var defaultAction = ManagementPanel.getDefaultAntAction();
 	this.startAction(defaultAction);
-
+	this.resource_carried = new createjs.Shape();
 }
 
 Ant.prototype.startAction = function(action) {
@@ -162,8 +163,10 @@ Ant.prototype.updateCollecting = function() {
 	}
 };
 Ant.prototype.collectResourceIfPossible = function() {
-	if (this.collected_resource.life <= 0) {
+	if (this.collected_resource.life <= 0 && ! this.carrying) {
 		delete this.collected_resource;
+		// game.stage.removeChild(this.resource_carried);
+		// this.carrying = false;
 		this.findResourceToCollect();
 	} else {
 		this.pickOrStoreResource();	
@@ -191,23 +194,30 @@ Ant.prototype.pickOrStoreResource = function() {
 	}
 };
 Ant.prototype.moveCollecting = function() {
-	if (this.go_to_wild) {
+	if (! this.carrying) {
 		this.moveTo(this.collected_resource.shape.x, this.collected_resource.shape.y);
 	} else {
 		this.moveToAnthill();
 	}
+
+	this.updateResourceCarried();
+};
+Ant.prototype.updateResourceCarried = function() {
+	this.resource_carried.x = this.shape.x;
+	this.resource_carried.y = this.shape.y;
 };
 Ant.prototype.canStoreFood = function() {
-	return ! this.go_to_wild && this.isNearFromAnthill();
+	return this.carrying && this.isNearFromAnthill();
 };
 Ant.prototype.storeFood = function() {
-	this.go_to_wild = true;
+	this.carrying = false;
+	game.stage.removeChild(this.resource_carried);
 	if (this.anthill.food_stock < this.anthill.max_food_stock) {
 		this.anthill.increaseFood(1);
 	}
 };
 Ant.prototype.canPickResource = function() {
-	return this.go_to_wild && this.isNear(this.collected_resource.shape.x, this.collected_resource.shape.y);
+	return ! this.carrying && this.isNear(this.collected_resource.shape.x, this.collected_resource.shape.y);
 };
 Ant.prototype.pickResource = function() {
 	this.collected_resource.life --;
@@ -217,7 +227,9 @@ Ant.prototype.pickResource = function() {
 		this.collected_resource.shape.graphics.beginFill("#F00").drawCircle(0, 0, this.collected_resource.life/2);
 	}
 	
-	this.go_to_wild = false;
+	this.carrying = true;
+	game.stage.addChild(this.resource_carried);
+	this.resource_carried.graphics.beginFill("#F00").drawCircle(0, 0, 2);
 };
 
 Ant.prototype.updateExploring = function() {

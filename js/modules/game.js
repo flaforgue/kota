@@ -64,6 +64,7 @@ Game.prototype.updateResources = function() {
     		resource = this.anthill.found_resources[i];
     		if (typeof resource != "undefined") {
 	    		if (resource.life <= 0) {
+	    			game.stage.removeChild(resource);
 	    			this.anthill.found_resources.splice(i, 1);
 	    		} else {
 	    			i ++;
