@@ -165,8 +165,6 @@ Ant.prototype.updateCollecting = function() {
 Ant.prototype.collectResourceIfPossible = function() {
 	if (this.collected_resource.life <= 0 && ! this.carrying) {
 		delete this.collected_resource;
-		// game.stage.removeChild(this.resource_carried);
-		// this.carrying = false;
 		this.findResourceToCollect();
 	} else {
 		this.pickOrStoreResource();	

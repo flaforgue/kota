@@ -4,9 +4,14 @@ function Anthill() {
 	this.ants = new Array;
   	this.size = 40;
   	this.nb_ants_max = 100;
-	this.shape.graphics.beginFill("#666").drawCircle(0, 0, this.size);
-	this.shape.graphics.beginFill("#000").drawCircle(0, 0, 20);
-
+	this.shape.graphics.beginFill("#222").drawCircle(0, 0, this.size);
+	this.shape.graphics.beginFill("#000").drawCircle(0, 0, this.size/1.2);
+	this.shape.graphics.beginFill("#333").drawCircle(0, 0, this.size/1.3);
+	this.shape.graphics.beginFill("#000").drawCircle(0, 0, this.size/1.6);
+	this.shape.graphics.beginFill("#444").drawCircle(0, 0, this.size/1.8);
+	this.shape.graphics.beginFill("#000").drawCircle(0, 0, this.size/2.2);
+	this.shape.graphics.beginFill("#555").drawCircle(0, 0, this.size/2.6);
+	this.shape.graphics.beginFill("#000").drawCircle(0, 0, this.size/5);
 	var x, y;
 	do {
 		x = Math.ceil(Math.random() * 800);
