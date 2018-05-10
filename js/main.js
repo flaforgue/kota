@@ -1,12 +1,26 @@
+var worldMovingInterval;
+var keyMapAttribute = {
+	37: "regX",
+	38: "regY",
+	39: "regX",
+	40: "regY"
+};
+var keyMapPositiveValue = {
+	37: false,
+	38: false,
+	39: true,
+	40: true
+};
+
 var ANT_COLORS = {
 	"waiting" : "#621",
 	"exploring" : "#4949ff",
 	"collecting" : "#008400"
 };
-var NB_ANTS_INIT = 10;
-var FOOD_INIT = 1;
+var NB_ANTS_INIT = 1;
+var FOOD_INIT = 10;
 
-var game = new Game();
+var game = new Game(2000, 2000);
 
 game.createAnthill();
 for (var i = 0; i < NB_ANTS_INIT ; i ++) {
@@ -21,7 +35,7 @@ createjs.Ticker.framerate = 100;
 createjs.Ticker.addEventListener("tick", function() {game.update()});
 
 setInterval(function() {
-	game.makeAntsEat();
+	//game.makeAntsEat();
 }, 2000);
 
 setInterval(function() {
@@ -57,3 +71,41 @@ $('.remove-ant-action').mousedown(function() {
 $('.add-ant-action, .remove-ant-action').mouseup(function() {
 	ManagementPanel.clearChangeAntActionInterval();
 });
+
+// move the world view
+$(window).keydown(function(event) {
+	var keyPressed = event.which;
+	if (keyMapAttribute.hasOwnProperty(keyPressed)) {
+		clearInterval(worldMovingInterval);
+		worldMovingInterval = setInterval(function() {
+			game.moveWorldView(keyMapAttribute[keyPressed], keyMapPositiveValue[keyPressed]);
+		}, 5);
+
+		event.preventDefault();
+		event.stopPropagation();
+		return false;
+	}
+});
+
+$(window).keyup(function(event) {
+	if (keyMapAttribute.hasOwnProperty(event.which)) {
+		clearInterval(worldMovingInterval);
+		event.preventDefault();
+		event.stopPropagation();
+		return false;
+	}
+});
+
+$(window).on('wheel', function(event) {
+	if (event.originalEvent.wheelDeltaY > 0) {
+		game.zoomIn(0.03);
+	} else {
+		game.zoomOut(0.03);
+	}
+});
+
+// disable mac chrome backward/forward if scrolling with trackpad
+history.pushState(null, null, location.href);
+window.onpopstate = function(event) {
+    history.go(1);
+};

@@ -1,9 +1,14 @@
 function Anthill() {
 	this.shape = new createjs.Shape();
 
-	this.ants = new Array;
   	this.size = 40;
+  	this.territory = {
+  		size: 100,
+  		shape: new createjs.Shape()
+  	}
+	this.ants = new Array;
   	this.nb_ants_max = 100;
+
 	this.shape.graphics.beginFill("#222").drawCircle(0, 0, this.size);
 	this.shape.graphics.beginFill("#000").drawCircle(0, 0, this.size/1.2);
 	this.shape.graphics.beginFill("#333").drawCircle(0, 0, this.size/1.3);
@@ -12,13 +17,18 @@ function Anthill() {
 	this.shape.graphics.beginFill("#000").drawCircle(0, 0, this.size/2.2);
 	this.shape.graphics.beginFill("#555").drawCircle(0, 0, this.size/2.6);
 	this.shape.graphics.beginFill("#000").drawCircle(0, 0, this.size/5);
+
 	var x, y;
 	do {
-		x = Math.ceil(Math.random() * 800);
-		y = Math.ceil(Math.random() * 600);
-	} while (! game.containsCoordinates(x, y, this.size));
+		x = Math.ceil(Math.random() * game.width);
+		y = Math.ceil(Math.random() * game.height);
+	} while (! game.containsCoordinates(x, y, 0));
+
 	this.shape.x = x;
 	this.shape.y = y;
+	this.territory.shape.x = this.shape.x;
+	this.territory.shape.y = this.shape.y;
+
 	this.food_stock = 0;
 	this.max_food_stock = 1000;
 	this.found_resources = new Array;
@@ -40,6 +50,7 @@ Anthill.prototype.canCreateAnt = function() {
 Anthill.prototype.createAnt = function() {
 	var newAnt = new Ant(this);
 	this.ants.push(newAnt);
+	this.updateTerritory(5);
 };
 
 Anthill.prototype.increaseFood = function(amount) {this.updateFood(amount);};
@@ -57,6 +68,30 @@ Anthill.prototype.updateFood = function(amount) {
 Anthill.prototype.containsCoordinate = function(x, y) {
 	return x > (this.shape.x - this.size) && x < (this.shape.x) + this.size
 	&& y > (this.shape.y) - this.size && y < (this.shape.y) + this.size;
+};
+
+Anthill.prototype.isInTerritory = function(x, y) {
+	var xIsInTerritory = x > (this.territory.shape.x - this.territory.size) && x < (this.territory.shape.x) + this.territory.size;
+
+	if (xIsInTerritory) {
+
+		// teta is the angle of a trigonometric circle
+		var cosTeta = (x - this.territory.shape.x)/this.territory.size;
+		var teta = Math.acos(cosTeta);
+		var maxYOffset = Math.sin(teta) * this.territory.size;
+
+		var minY = this.territory.shape.y - maxYOffset;
+		var maxY = this.territory.shape.y + maxYOffset;
+		
+		var yIsInTerritory = y > minY && y < maxY;
+		
+		return xIsInTerritory && yIsInTerritory && game.containsCoordinates(x, y, 0);
+
+	} else {
+
+		return false;
+
+	}
 };
 
 Anthill.prototype.findCollectableResource = function() {
@@ -106,9 +141,20 @@ Anthill.prototype.decreasePopulation = function() {
 
 Anthill.prototype.killAnt = function(antToKillIndex) {
 	var antToKill = this.ants[antToKillIndex];
+	if (antToKill.action == "collecting") {
+		game.stage.removeChild(antToKill.resource_carried);
+	}
 	this.activities_done[antToKill.action] --;
 	ManagementPanel.updateNbAntsForAction(antToKill.action);
 
+	this.updateTerritory(-5);
 	this.ants.splice(antToKillIndex, 1);
 	game.stage.removeChild(antToKill.shape);
+	game.stage.removeChild(antToKill.resource_carried);
+}
+
+Anthill.prototype.updateTerritory = function(delta) {
+	this.territory.size += delta;
+	this.territory.shape.graphics.clear();
+	this.territory.shape.graphics.beginFill("rgba(0,170,255,0.2)").drawCircle(0, 0, this.territory.size);
 }

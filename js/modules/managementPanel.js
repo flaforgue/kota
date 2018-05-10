@@ -28,8 +28,9 @@ ManagementPanel.addOrRemoveAntActionButtonHandler = function(action, actionIsAdd
 	ManagementPanel.addOrRemoveAction(action, actionIsAdd);
 	ManagementPanel.changeAntActionInterval = setInterval(function() {
 		ManagementPanel.addOrRemoveAction(action, actionIsAdd);
-	}, 200, actionIsAdd);
+	}, 100, actionIsAdd);
 };
+
 ManagementPanel.addOrRemoveAction = function(action, actionIsAdd) {
 	if (actionIsAdd) {
 		ManagementPanel.addAntAction(action);
@@ -37,6 +38,7 @@ ManagementPanel.addOrRemoveAction = function(action, actionIsAdd) {
 		ManagementPanel.removeAntAction(action);
 	}
 };
+
 ManagementPanel.addAntAction = function(action) {
 	if (game.anthill.hasWaitingAnt()) {
 		var ant = game.anthill.getWaitingAnt();
@@ -46,6 +48,7 @@ ManagementPanel.addAntAction = function(action) {
     	ManagementPanel.updateNbAntsForAction('waiting');
 	}
 };
+
 ManagementPanel.removeAntAction = function(action) {
 	if (game.anthill.hasAntOfActivity(action)) {
 		var ant = game.anthill.getAntOfActivity(action);

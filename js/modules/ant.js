@@ -67,6 +67,11 @@ Ant.prototype.smoothCoordinates = function() {
 };
 
 Ant.prototype.changeActivityTo = function(newAction) {
+	if (this.action == "collecting") {
+		game.stage.removeChild(this.resource_carried);
+	} else if (newAction == "collecting") {
+		game.stage.addChild(this.resource_carried);
+	}
 	this.updateAnthillActivitiesDone(false);
 	this.action = newAction;
 	this.updateAnthillActivitiesDone(true);
@@ -98,15 +103,24 @@ Ant.prototype.isNear = function(x, y) {
 Ant.prototype.moveToTarget = function() {this.moveTo(this.xT, this.yT);};
 Ant.prototype.moveToAnthill = function() {this.moveTo(this.anthill.shape.x, this.anthill.shape.y);};
 Ant.prototype.moveTo = function(targetX, targetY) {
-	if (this.hasToMove('x', targetX)) {
+	if (this.hasToMove('x', targetX) && ! this.hasToMove('y', targetX)) {
 		this.moveToBy('x', targetX);
-	} else {
+	} else if (this.hasToMove('y', targetX) && ! this.hasToMove('x', targetX)) {
 		this.moveToBy('y', targetY);
+	} else {
+		var axeIsX = Math.floor(Math.random() * 2);
+		if (axeIsX) {
+			this.moveToBy('x', targetX);
+		} else {
+			this.moveToBy('y', targetY);
+		}
 	}
 };
+
 Ant.prototype.hasToMove = function(axe, target) {
 	return this.shape[axe] != target;
 };
+
 Ant.prototype.moveToBy = function(coordinate, target) {
 	if (this.shape[coordinate] < target) {
 		this.shape[coordinate] += 1;
@@ -145,8 +159,8 @@ Ant.prototype.updateWaiting = function() {
 
 Ant.prototype.findTargetInAnthill = function() {
 	do {
-		this.xT = (this.anthill.shape.x - this.anthill.size/2) + Math.ceil(Math.random() * this.anthill.size);
-		this.yT = (this.anthill.shape.y - this.anthill.size/2) + Math.ceil(Math.random() * this.anthill.size);
+		this.xT = (this.anthill.shape.x - this.anthill.size / 2) + Math.ceil(Math.random() * this.anthill.size);
+		this.yT = (this.anthill.shape.y - this.anthill.size / 2) + Math.ceil(Math.random() * this.anthill.size);
 	} while (! this.anthill.containsCoordinate(this.xT, this.yT));
 }
 
@@ -159,6 +173,7 @@ Ant.prototype.updateCollecting = function() {
 		this.actLikeWaitingAnt();
 	}
 };
+
 Ant.prototype.collectResourceIfPossible = function() {
 	if (this.collected_resource.life <= 0 && ! this.carrying) {
 		delete this.collected_resource;
@@ -174,13 +189,16 @@ Ant.prototype.actLikeWaitingAnt = function() {
 	}
 	this.updateWaiting();
 };
+
 Ant.prototype.forgetTarget = function() {
 	delete this.xT;
 	delete this.yT;
 };
+
 Ant.prototype.hasCollectedResource = function() {
 	return typeof this.collected_resource != "undefined";
-}
+};
+
 Ant.prototype.pickOrStoreResource = function() {
 	if (this.canStoreFood()) {
 		this.storeFood();
@@ -188,6 +206,7 @@ Ant.prototype.pickOrStoreResource = function() {
 		this.pickResource();
 	}
 };
+
 Ant.prototype.moveCollecting = function() {
 	if (! this.carrying) {
 		this.moveTo(this.collected_resource.shape.x, this.collected_resource.shape.y);
@@ -197,13 +216,16 @@ Ant.prototype.moveCollecting = function() {
 
 	this.updateResourceCarried();
 };
+
 Ant.prototype.updateResourceCarried = function() {
 	this.resource_carried.x = this.shape.x;
 	this.resource_carried.y = this.shape.y;
 };
+
 Ant.prototype.canStoreFood = function() {
 	return this.carrying && this.isNearFromAnthill();
 };
+
 Ant.prototype.storeFood = function() {
 	this.carrying = false;
 	game.stage.removeChild(this.resource_carried);
@@ -211,9 +233,11 @@ Ant.prototype.storeFood = function() {
 		this.anthill.increaseFood(1);
 	}
 };
+
 Ant.prototype.canPickResource = function() {
 	return ! this.carrying && this.isNear(this.collected_resource.shape.x, this.collected_resource.shape.y);
 };
+
 Ant.prototype.pickResource = function() {
 	this.collected_resource.life --;
 	this.collected_resource.shape.graphics.clear();
@@ -238,29 +262,39 @@ Ant.prototype.updateExploring = function() {
 
 	this.moveToTarget();
 };
+
 Ant.prototype.findResourceIfPossible = function() {
 	if (this.canFindResource() && this.hasFoundResource()) {
 		this.saveResource();
 	}
 	this.findNewExploringTarget();
-}
+};
+
 Ant.prototype.hasTarget = function() {
 	return typeof this.xT != "undefined" && typeof this.yT != "undefined";
 };
+
 Ant.prototype.findNewExploringTarget = function() {
+	var minX = this.anthill.shape.x - this.anthill.territory.size;
+	var minY = this.anthill.shape.y - this.anthill.territory.size;
+	var maxX = this.anthill.shape.x + this.anthill.territory.size;
+	var maxY = this.anthill.shape.y + this.anthill.territory.size;
+
 	do {
-		this.xT = Math.ceil(Math.random() * 800);
-		this.yT = Math.ceil(Math.random() * 600);
-	} while (! game.containsCoordinates(this.xT, this.yT, 0));
+		this.xT = Math.ceil(Math.random() * maxX) + minX;
+		this.yT = Math.ceil(Math.random() * maxY) + minY;
+	} while (! this.anthill.isInTerritory(this.xT, this.yT, 30));
 };
+
 Ant.prototype.canFindResource = function() {
 	return this.anthill.found_resources.length < 25;
 };
+
 Ant.prototype.hasFoundResource = function() {
 	var chances = ((this.anthill.found_resources.length) + 1) * 2;
-	console.log(chances);
 	return Math.ceil(Math.random() * chances) == chances;
 };
+
 Ant.prototype.saveResource = function() {
 	resourceX = Math.ceil(this.xT);
 	resourceY = Math.ceil(this.yT);
