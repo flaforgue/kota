@@ -1,4 +1,5 @@
-var worldMovingInterval;
+var worldMovingIntervalX;
+var worldMovingIntervalY;
 var keyMapAttribute = {
 	37: "regX",
 	38: "regY",
@@ -76,10 +77,19 @@ $('.add-ant-action, .remove-ant-action').mouseup(function() {
 $(window).keydown(function(event) {
 	var keyPressed = event.which;
 	if (keyMapAttribute.hasOwnProperty(keyPressed)) {
-		clearInterval(worldMovingInterval);
-		worldMovingInterval = setInterval(function() {
-			game.moveWorldView(keyMapAttribute[keyPressed], keyMapPositiveValue[keyPressed]);
-		}, 5);
+		var direction = keyMapAttribute[keyPressed];
+
+		if (direction == 'regX') {
+			clearInterval(worldMovingIntervalX);
+			worldMovingIntervalX = setInterval(function() {
+				game.moveWorldView(direction, keyMapPositiveValue[keyPressed]);
+			}, 5);
+		} else {
+			clearInterval(worldMovingIntervalY);
+			worldMovingIntervalY = setInterval(function() {
+				game.moveWorldView(direction, keyMapPositiveValue[keyPressed]);
+			}, 5);
+		}
 
 		event.preventDefault();
 		event.stopPropagation();
@@ -89,7 +99,14 @@ $(window).keydown(function(event) {
 
 $(window).keyup(function(event) {
 	if (keyMapAttribute.hasOwnProperty(event.which)) {
-		clearInterval(worldMovingInterval);
+		var direction = keyMapAttribute[event.which];
+
+		if (direction == 'regX') {
+			clearInterval(worldMovingIntervalX);
+		} else {
+			clearInterval(worldMovingIntervalY);
+		}
+		
 		event.preventDefault();
 		event.stopPropagation();
 		return false;

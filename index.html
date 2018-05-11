@@ -13,34 +13,6 @@
 		<table id="control-panel">
 			<thead>
 				<tr>
-					<th>Fourmis</th>
-					<th>Nourriture</th>
-				</tr>
-			</thead>
-
-			<tbody>
-				<tr>
-					<td id="nb-ants">
-						<div class="barbox">
-							<span id="ants-bar" class="bar ants"></span>
-							<span id="ants-label" class="barlabel"></span>
-						</div>
-					</td>
-					<td id="food-stock">
-						<div class="barbox">
-							<span id="food-bar" class="bar food"></span>
-							<span id="food-label" class="barlabel"></span>
-						</div>
-					</td>
-				</tr>
-			</tbody>
-		</table>
-
-
-		<br>
-		<table id="control-panel">
-			<thead>
-				<tr>
 					<th>Action</th>
 					<th>Fourmis</th>
 					<th>Focus</th>
@@ -80,7 +52,7 @@
 
 		<br>
 
-		<div class="padding">Action par défaut des nouvelles fourmis :
+		<div class="padding">Action par défaut :
 			<select id="default-action">
 				<option value="waiting">Attente</option>
 				<option value="exploring">Exploration</option>
@@ -88,7 +60,20 @@
 			</select>
 		</div>
 
-		<div id="dialog"></div>
+		<br>
+
+		<div id="nb-ants">
+			<div class="barbox">
+				<span id="ants-bar" class="bar ants"></span>
+				<span id="ants-label" class="barlabel"></span>
+			</div>
+		</div>
+		<div id="food-stock">
+			<div class="barbox">
+				<span id="food-bar" class="bar food"></span>
+				<span id="food-label" class="barlabel"></span>
+			</div>
+		</div>
 	</aside>
 
   	<canvas id="kota" width="800" height="600"></canvas>

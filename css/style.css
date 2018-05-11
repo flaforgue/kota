@@ -52,15 +52,22 @@ table tr td {
 	text-align: left;
 }
 
+.barbox, .bar {
+	border-radius: 10px;
+}
+
 .barbox {
 	height: 20px;
 	background-color: #000;
-	border: 1px solid #000;
+	border: 2px solid #000;
 	position: relative;
+	width: 95%;
+    margin: 5px auto;
 }
 
 .bar {
 	height: 20px;
+	min-width: 20px;
 	display: inline-block;
 }
 
