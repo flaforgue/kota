@@ -1,6 +1,6 @@
 # Kota
 
-[https://flolfg.github.io/kota/](https://flolfg.github.io/kota/)
+[https://flaforgue.github.io/kota/](https://flolfg.github.io/kota/)
 
 But : avoir le plus de fourmis et s'étendre le plus possible
 
